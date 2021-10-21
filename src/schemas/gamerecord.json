@@ -1,0 +1,217 @@
+{
+	"$schema": "http://json-schema.org/schema#",
+	"id": "https://www.abstractplay.com/schemas/gamerecord/1-0-0.json#",
+    "title": "AP Game Record",
+	"description": "Schema describing expected response of a game script to an 'archive' request. The structure is modelled after chess PGN files because many (even most) abstract strategy games can be represented with such notation. Each game will define its own move notation. We chose to go with a JSON schema over raw PGN because there are important games (such as Homeworlds) that don't work well with pure PGN. These reports are the reports of record. Game data is periodically purged from the main databases. Player rankings and ratings are calculated based on these game reports. This format is also being extended so it can be used by other game services. That way we could run a centralized records & ranking service that could work across game platforms.",
+	"type": "object",
+	"properties": 
+	{
+		"header": 
+		{
+			"description": "Series of (essentially) name-value pairs that gives the game metadata.",
+			"type": "object",
+			"properties": 
+			{
+				"game": 
+				{
+					"description": "A description of exactly what game this report represents.",
+					"type": "object",
+					"properties": 
+					{
+						"name": 
+						{
+							"description": "Full name of the game. Needs to be consistent across services, unless some sort of aliasing is provided.",
+							"type": "string"
+						},
+						"variants": 
+						{
+							"description": "Variants used in this game.",
+							"type": "array",
+							"minItems": 0,
+							"uniqueItems": true,
+							"items": 
+							{
+								"type": "string"
+							}
+						}
+					},
+					"additionalProperties": false,
+					"required": 
+					[
+						"name"
+					]
+				},
+				"event": 
+				{
+					"description": "Only provide if part of a formal tournament or event. The 'round' header must also exist.",
+					"type": "string"
+				},
+				"round": 
+				{
+					"description": "Only use when part of a larger formal event. The 'event' header must also exist.",
+					"type": "string",
+					"pattern": "^\\d+(\\.\\d+)*$"
+				},
+				"site": 
+				{
+					"description": "Where the game took place.",
+					"type": "object",
+					"properties": 
+					{
+						"name": 
+						{
+							"description": "For physical games, it should be the location of the game. For online games, use a consistent name for that service so that records can be collated. For Abstract Play games, this should always be 'Abstract Play'.",
+							"type": "string"
+						},
+						"gameid": 
+						{
+							"description": "For online games, provide the unique game identifier for this game on the given site. This should be unique across the entire site. For physical games, you should omit this. When absent, the system will provide a random UUID.",
+							"type": 
+							[
+								"string",
+								"number"
+							]
+						}
+					},
+					"additionalProperties": false,
+					"required": 
+					[
+						"name"
+					]
+				},
+				"date-start": 
+				{
+					"description": "Datetime the game started.",
+					"type": "string",
+					"format": "date-time"
+				},
+				"date-end": 
+				{
+					"description": "Datetime the game ended. Required because the recrank system is not intended to house incomplete records.",
+					"type": "string",
+					"format": "date-time"
+				},
+				"date-generated": 
+				{
+					"description": "The datetime this report was last generated/updated.",
+					"type": "string",
+					"format": "date-time"
+				},
+				"players": 
+				{
+					"description": "List of the players and their userids and final scores. They should be listed in seating order (first player, then second player, etc.). Additional properties are accepted, so feel free to include information specifically relevant to a particular game. Any additional properties should be provided consistently for any reports from that site for that game.",
+					"type": "array",
+					"minItems": 1,
+					"uniqueItems": true,
+					"items": 
+					{
+						"type": "object",
+						"properties": 
+						{
+							"name": 
+							{
+								"description": "User's name as of the time the game was archived.",
+								"type": "string"
+							},
+							"userid": 
+							{
+								"description": "User's unique identifier on the `site` indicated. Only provide if applicable.",
+								"type": 
+								[
+									"string",
+									"integer"
+								]
+							},
+							"score": 
+							{
+								"description": "Where applicable, give the player's score.",
+								"type": "number"
+							},
+							"is_ai": 
+							{
+								"description": "This field flags a player as being an AI.",
+								"type": "boolean"
+							},
+							"result": 
+							{
+								"description": "This is how the system determines who won. Each player should be given a number. Players who share the same number are scored as tied in their bracket. Higher numbers indicate 'more winning' players (e.g., a group of players with a result of 2 are considered as having beat any group of players with a result of less than 2). For two-player games, stick with convention: winners are given a result of 1 and losers are given a result of 0 (though the exact number is insignificant; you could just as easily give them a result of 100 and 3; what matters are the relative magnitudes). For a two-player draw, just give each player the same number. For games with more than two players, group and order them in whatever way makes sense for your game. The recranks system will have certain default behaviours and will also be tailored for specific games where necessary.",
+								"type": "integer"
+							}
+						},
+						"additionalProperties": true,
+						"required": 
+						[
+							"name",
+							"result"
+						]
+					}
+				}
+			},
+			"additionalProperties": false,
+			"required": 
+			[
+				"game",
+				"site",
+				"date-start",
+				"date-end",
+				"date-generated",
+				"players"
+			]
+		},
+		"moves": 
+		{
+			"description": "The list of moves, including possible commentary. Each entry represents a game round (one turn for each player).",
+			"type": "array",
+			"items": 
+			{
+				"description": "Each round is also represented by an array—one entry per player. The position in this array must correlate to the seating order in the 'players' header. If one player didn't play that round (they were eliminated, for example), then their entry should be NULL. This works fine for simultaneous games as well. This system breaks down if the order of play varies frequently, but most abstract strategy board games suitable for Abstract Play will fit this paradigm.",
+				"type": "array",
+				"items": 
+				{
+					"oneOf": 
+					[
+						{"type": "null"},
+						{
+							"type": "object",
+							"properties":
+							{
+								"sequence":
+								{
+									"description": "For those rare situations where turn order changes a lot and you need to specify the order the moves took place during the round (it differed from the seating order), add simple integers to show the sequence of moves that round.",
+									"type": "integer"
+								},
+								"move": 
+								{
+									"description": "The text notation of the move itself. May be multi-line (as in Homeworlds) or any format appropriate for your game.",
+									"type": "string"
+								},
+								"result":
+								{
+									"description": "Optional. It sometimes makes sense to express the result of the move for human readers (e.g., points gained, player elimination). Express it here as a string, or see the [Move Result schema](https://www.abstractplay.com/schemas/moveresults/1-0-0.json#) contained in the `gameslib` repository.",
+                                    "anyOf": [
+                                        {"type": "string"},
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    ]
+								}
+							},
+							"additionalProperties": false,
+							"required": ["move"]
+						}
+					]
+				}
+			}
+		}
+	},
+	"additionalProperties": false,
+	"required": 
+	[
+		"header",
+		"moves"
+	]
+}
