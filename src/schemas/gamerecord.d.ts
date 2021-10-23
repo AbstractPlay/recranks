@@ -73,9 +73,9 @@ export interface APGameRecord {
          */
         name: string;
         /**
-         * User's unique identifier on the `site` indicated.
+         * User's unique identifier on the `site` indicated. Optional, but if not provided, the game cannot be rated.
          */
-        userid: string;
+        userid?: string;
         /**
          * Where applicable, give the player's score.
          */
@@ -96,9 +96,9 @@ export interface APGameRecord {
          */
         name: string;
         /**
-         * User's unique identifier on the `site` indicated.
+         * User's unique identifier on the `site` indicated. Optional, but if not provided, the game cannot be rated.
          */
-        userid: string;
+        userid?: string;
         /**
          * Where applicable, give the player's score.
          */
@@ -118,22 +118,26 @@ export interface APGameRecord {
   /**
    * The list of moves, including possible commentary. Each entry represents a game round (one turn for each player).
    */
-  moves: (null | {
-    /**
-     * For those rare situations where turn order changes a lot and you need to specify the order the moves took place during the round (it differed from the seating order), add simple integers to show the sequence of moves that round.
-     */
-    sequence?: number;
-    /**
-     * The text notation of the move itself. May be multi-line (as in Homeworlds) or any format appropriate for your game.
-     */
-    move: string;
-    /**
-     * Optional. It sometimes makes sense to express the result of the move for human readers (e.g., points gained, player elimination). Express it here as a string, or see the [Move Result schema](https://www.abstractplay.com/schemas/moveresults/1-0-0.json#) contained in the `gameslib` repository.
-     */
-    result?:
-      | string
-      | {
-          [k: string]: unknown;
-        }[];
-  })[][];
+  moves: (
+    | null
+    | string
+    | {
+        /**
+         * For those rare situations where turn order changes a lot and you need to specify the order the moves took place during the round (it differed from the seating order), add simple integers to show the sequence of moves that round.
+         */
+        sequence?: number;
+        /**
+         * The text notation of the move itself. May be multi-line (as in Homeworlds) or any format appropriate for your game.
+         */
+        move: string;
+        /**
+         * Optional. It sometimes makes sense to express the result of the move for human readers (e.g., points gained, player elimination). Express it here as a string, or see the [Move Result schema](https://www.abstractplay.com/schemas/moveresults/1-0-0.json#) contained in the `gameslib` repository.
+         */
+        result?:
+          | string
+          | {
+              [k: string]: unknown;
+            }[];
+      }
+  )[][];
 }

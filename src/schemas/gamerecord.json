@@ -78,10 +78,10 @@
                     "format": "date-time"
                 },
                 "unrated": {
-					"description": "Set to true to explicitly flag a record as 'unrated'",
-					"type": "boolean",
-					"default": false
-				},
+                    "description": "Set to true to explicitly flag a record as 'unrated'",
+                    "type": "boolean",
+                    "default": false
+                },
                 "players": {
                     "description": "List of the players and their userids and final scores. They should be listed in seating order (first player, then second player, etc.). Additional properties are accepted, so feel free to include information specifically relevant to a particular game. Any additional properties should be provided consistently for any reports from that site for that game.",
                     "type": "array",
@@ -139,6 +139,9 @@
                     "oneOf": [
                         {
                             "type": "null"
+                        },
+                        {
+                            "type": "string"
                         },
                         {
                             "type": "object",
