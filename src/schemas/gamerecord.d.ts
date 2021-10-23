@@ -60,6 +60,10 @@ export interface APGameRecord {
      */
     "date-generated": string;
     /**
+     * Set to true to explicitly flag a record as 'unrated'
+     */
+    unrated?: boolean;
+    /**
      * List of the players and their userids and final scores. They should be listed in seating order (first player, then second player, etc.). Additional properties are accepted, so feel free to include information specifically relevant to a particular game. Any additional properties should be provided consistently for any reports from that site for that game.
      */
     players: [
@@ -69,9 +73,9 @@ export interface APGameRecord {
          */
         name: string;
         /**
-         * User's unique identifier on the `site` indicated. Only provide if applicable.
+         * User's unique identifier on the `site` indicated.
          */
-        userid?: string | number;
+        userid: string;
         /**
          * Where applicable, give the player's score.
          */
@@ -92,9 +96,9 @@ export interface APGameRecord {
          */
         name: string;
         /**
-         * User's unique identifier on the `site` indicated. Only provide if applicable.
+         * User's unique identifier on the `site` indicated.
          */
-        userid?: string | number;
+        userid: string;
         /**
          * Where applicable, give the player's score.
          */
