@@ -38,8 +38,7 @@
                 },
                 "round": {
                     "description": "Only use when part of a larger formal event. The 'event' header must also exist.",
-                    "type": "string",
-                    "pattern": "^\\d+(\\.\\d+)*$"
+                    "type": "string"
                 },
                 "site": {
                     "description": "Where the game took place.",
