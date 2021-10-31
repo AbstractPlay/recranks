@@ -29,7 +29,7 @@ export class ELOBasic extends Rater {
     private genRating(Ra: number, Rb: number, result: 1|0|0.5, K: number): [number, number] {
         const Ea = 1 / (1 + Math.pow(10, (Rb - Ra) / 400));
         const Eb = 1 / (1 + Math.pow(10, (Ra - Rb) / 400));
-        
+
         let newA: number = 0;
         let newB: number = 0;
         if (result === 1) {
@@ -67,7 +67,7 @@ export class ELOBasic extends Rater {
                 continue;
             }
             const recid = rec.header.site.name + "|" + rec.header.site.gameid;
-            
+
             // Check for duplicate recid
             if (recids.has(recid)) {
                 if (this.failHard) {
