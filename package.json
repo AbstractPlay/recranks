@@ -32,7 +32,6 @@
     ],
     "private": true,
     "devDependencies": {
-        "@abstractplay/gameslib": "github:abstractplay/gameslib#v1.0.0-beta",
         "@types/chai": "^4.2.22",
         "@types/mocha": "^9.0.0",
         "chai": "^4.3.4",
