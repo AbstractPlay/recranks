@@ -1,6 +1,6 @@
 {
     "name": "@abstractplay/recranks",
-    "version": "0.1.0",
+    "version": "1.0.0-beta",
     "description": "The Records and Rankings module of Abstract Play",
     "main": "build/index.js",
     "types": "build/index.d.ts",
@@ -32,7 +32,7 @@
     ],
     "private": true,
     "devDependencies": {
-        "@abstractplay/gameslib": "file:../apgames",
+        "@abstractplay/gameslib": "github:abstractplay/gameslib#v1.0.0-beta",
         "@types/chai": "^4.2.22",
         "@types/mocha": "^9.0.0",
         "chai": "^4.3.4",
