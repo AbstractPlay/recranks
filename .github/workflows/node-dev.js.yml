@@ -32,6 +32,7 @@ jobs:
     - run: npm test
 
   relay:
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Trigger downstream build and test
