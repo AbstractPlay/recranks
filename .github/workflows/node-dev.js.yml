@@ -31,7 +31,7 @@ jobs:
     - run: npm run build --if-present
     - run: npm test
     # prerelease --preid=ci-$GITHUB_RUN_ID
-    - run: npm version 1.0.0-beta.dev --no-git-tag-version --allow-same-version
+    - run: npm version prerelease --preid=ci-$GITHUB_RUN_ID --no-git-tag-version
     - run: npm pack
     - name: Upload
       uses: actions/upload-artifact@v3
