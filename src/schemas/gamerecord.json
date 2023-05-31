@@ -116,6 +116,10 @@
                             "result"
                         ]
                     }
+                },
+                "startingPosition": {
+                    "description": "Some games have variable starting conditions (like Alien City). This string should describe that position.",
+                    "type": "string"
                 }
             },
             "additionalProperties": false,
