@@ -118,6 +118,7 @@ export interface APGameRecord {
      * Some games have variable starting conditions (like Alien City). This string should describe that position.
      */
     startingPosition?: string;
+    [k: string]: unknown;
   };
   /**
    * The list of moves, including possible commentary. Each entry represents a game round (one turn for each player).
