@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/schema#",
-    "id": "https://www.abstractplay.com/schemas/gamerecord/1-0-0.json#",
+    "$id": "https://www.abstractplay.com/schemas/gamerecord/1-0-0.json#",
     "title": "AP Game Record",
     "description": "Schema describing expected response of a game script to an 'archive' request. The structure is modelled after chess PGN files because many (even most) abstract strategy games can be represented with such notation. Each game will define its own move notation. We chose to go with a JSON schema over raw PGN because there are important games (such as Homeworlds) that don't work well with pure PGN. These reports are the reports of record. Game data is periodically purged from the main databases. Player rankings and ratings are calculated based on these game reports. This format is also being extended so it can be used by other game services. That way we could run a centralized records & ranking service that could work across game platforms.",
     "type": "object",

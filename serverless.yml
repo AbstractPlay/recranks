@@ -1,0 +1,85 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: abstract-play-recranks
+# app and org for use with dashboard.serverless.com
+# app: apfront
+# org: wamelen
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+frameworkVersion: '3'
+
+custom:
+  scheduleEnabled:
+    prod: true
+    dev: false
+  recbucket:
+    prod: "records.abstractplay.com"
+    dev: "records.abstractplay.com"
+  dumpbucket: "abstractplay-db-dump"
+
+params:
+  dev:
+    profile: AbstractPlayDev
+    userpool: arn:aws:cognito-idp:us-east-1:153672715141:userpool/us-east-1_2zrzbEjoU
+  prod:
+    profile: AbstractPlayProd
+    userpool: arn:aws:cognito-idp:us-east-1:153672715141:userpool/us-east-1_YCjgSZHJm
+
+package:
+  excludeDevDependencies: false
+
+plugins:
+  - serverless-plugin-common-excludes
+  - serverless-plugin-include-dependencies
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${opt:stage, 'dev'}
+  profile: ${param:profile}
+  region: us-east-1
+  environment:
+    ABSTRACT_PLAY_TABLE: abstract-play-${self:provider.stage}
+    userpool: ${param:userpool}
+  iam:
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+            - 's3:ListBucket'
+          Resource: 'arn:aws:s3:::abstractplay-db-dump'
+        - Effect: 'Allow'
+          Action:
+            - 's3:GetObject'
+          Resource: 'arn:aws:s3:::abstractplay-db-dump/*'
+        - Effect: 'Allow'
+          Action:
+            - 's3:ListBucket'
+          Resource: 'arn:aws:s3:::records.abstractplay.com'
+        - Effect: 'Allow'
+          Action:
+            - 's3:PutObject'
+          Resource: 'arn:aws:s3:::records.abstractplay.com/*'
+functions:
+  summarize:
+    handler: build/actions/summarize.handler
+    description: Summarize generated game reports
+    timeout: 60
+    events:
+      - eventBridge:
+          name: abstractplay-${self:provider.stage}-summarize
+          description: Summarize generated game reports
+          enabled: ${self:custom.scheduleEnabled.${self:provider.stage}}
+          schedule: cron(0 6 ? * 1 *)
