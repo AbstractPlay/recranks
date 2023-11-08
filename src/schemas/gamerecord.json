@@ -82,7 +82,7 @@
                     "default": false
                 },
                 "pied": {
-                    "describe": "Set to `true` if the pie rule was invoked.",
+                    "description": "Set to `true` if the pie rule was invoked.",
                     "type": "boolean",
                     "default": false
                 },
