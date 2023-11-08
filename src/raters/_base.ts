@@ -1,4 +1,5 @@
-import Ajv from "ajv";
+import Ajv, {type ValidateFunction} from "ajv";
+import addFormats from "ajv-formats";
 import { APGameRecord } from "../schemas/gamerecord"
 import schema from "../schemas/gamerecord.json";
 
@@ -31,7 +32,7 @@ export abstract class Rater {
     protected failHard: boolean = false;
     protected minRounds: number = 3;
     protected respectUnrated: boolean = true;
-    protected validate: Ajv.ValidateFunction;
+    protected validate: ValidateFunction;
 
     constructor(opts?: IRaterOptions) {
         if (opts !== undefined) {
@@ -46,7 +47,8 @@ export abstract class Rater {
             }
         }
 
-        const ajv = new Ajv();
+        const ajv = new Ajv({allowUnionTypes: true});
+        addFormats(ajv);
         this.validate = ajv.compile(schema);
     }
 
