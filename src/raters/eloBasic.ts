@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { APGameRecord } from "../schemas/gamerecord";
 import { Rater, IRaterOptions, IRaterResults, IRating } from "./_base";
 
@@ -12,6 +13,7 @@ export interface IELOOptions extends IRaterOptions {
 
 export class ELOBasic extends Rater {
     private ratingStart = 1200;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private K = (p1Rating: number, p1Games: number, p2Rating: number, p2Games: number): number => { return 30; };
 
     constructor(opts?: IELOOptions) {

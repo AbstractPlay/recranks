@@ -170,7 +170,6 @@ export class Glicko2 extends Rater {
         }
 
         // process each set of matches simultaneously
-        console.log(JSON.stringify(ratings));
         for (const [uid, matchlst] of matches.entries()) {
             // fetch user record
             const rating = ratings.get(uid)!;
