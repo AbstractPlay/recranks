@@ -66,7 +66,11 @@ export interface APGameRecord {
      */
     unrated?: boolean;
     /**
-     * List of the players and their userids and final scores. They should be listed in seating order (first player, then second player, etc.). Additional properties are accepted, so feel free to include information specifically relevant to a particular game. Any additional properties should be provided consistently for any reports from that site for that game.
+     * Set to `true` if the pie rule was invoked.
+     */
+    pied?: boolean;
+    /**
+     * List of the players and their userids and final scores. They should be listed in seating order (first player, then second player, etc.). Additional properties are accepted, so feel free to include information specifically relevant to a particular game. Any additional properties should be provided consistently for any reports from that site for that game. Note that player order should be as of the *end* of the game. So if the pie rule was invoked, then the seating should reflect the final order.
      *
      * @minItems 1
      */
@@ -118,6 +122,11 @@ export interface APGameRecord {
         [k: string]: unknown;
       }[]
     ];
+    /**
+     * Some games have variable starting conditions (like Alien City). This string should describe that position.
+     */
+    startingPosition?: string;
+    [k: string]: unknown;
   };
   /**
    * The list of moves, including possible commentary. Each entry represents a game round (one turn for each player).

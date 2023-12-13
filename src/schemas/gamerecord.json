@@ -81,8 +81,13 @@
                     "type": "boolean",
                     "default": false
                 },
+                "pied": {
+                    "description": "Set to `true` if the pie rule was invoked.",
+                    "type": "boolean",
+                    "default": false
+                },
                 "players": {
-                    "description": "List of the players and their userids and final scores. They should be listed in seating order (first player, then second player, etc.). Additional properties are accepted, so feel free to include information specifically relevant to a particular game. Any additional properties should be provided consistently for any reports from that site for that game.",
+                    "description": "List of the players and their userids and final scores. They should be listed in seating order (first player, then second player, etc.). Additional properties are accepted, so feel free to include information specifically relevant to a particular game. Any additional properties should be provided consistently for any reports from that site for that game. Note that player order should be as of the *end* of the game. So if the pie rule was invoked, then the seating should reflect the final order.",
                     "type": "array",
                     "minItems": 1,
                     "uniqueItems": true,
@@ -116,9 +121,13 @@
                             "result"
                         ]
                     }
+                },
+                "startingPosition": {
+                    "description": "Some games have variable starting conditions (like Alien City). This string should describe that position.",
+                    "type": "string"
                 }
             },
-            "additionalProperties": false,
+            "additionalProperties": true,
             "required": [
                 "game",
                 "site",
