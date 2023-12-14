@@ -1,65 +1,62 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { APGameRecord } from "../schemas/gamerecord";
 import { Rater, IRaterOptions, IRaterResults, IRating } from "./_base";
+import glicko2 from "glicko2-lite";
 
 /**
- * This library only accepts a single K constant for all players.
  * This library also only works for two-player games.
  */
-export interface IELOOptions extends IRaterOptions {
-    K: (p1Rating: number, p1Games: number, p2Rating: number, p2Games: number) => number;
+export interface IGlickoOptions extends IRaterOptions {
+    knownRatings: Map<string, IGlickoRating>;
     ratingStart: number;
+    rdStart: number;
+    volatilityStart: number;
+    tau: number;
 }
 
-export class ELOBasic extends Rater {
-    private ratingStart = 1200;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private K = (p1Rating: number, p1Games: number, p2Rating: number, p2Games: number): number => { return 30; };
+export interface IGlickoRating extends IRating {
+    rd: number;
+    volatility: number;
+}
 
-    constructor(opts?: IELOOptions) {
+export class Glicko2 extends Rater {
+    private ratingStart = 1500;
+    private rdStart = 350;
+    private volatilityStart = 0.06;
+    private tau = 0.5;
+    public knownRatings = new Map<string, IGlickoRating>();
+
+    constructor(opts?: IGlickoOptions) {
         super(opts);
-        if (opts !== undefined) {
-            if (opts.K !== undefined) {
-                this.K = opts.K;
-            }
-            if (opts.ratingStart !== undefined) {
-                this.ratingStart = opts.ratingStart;
-            }
+        if (opts?.knownRatings !== undefined) {
+            this.knownRatings = new Map(opts.knownRatings)
         }
-    }
-
-    private genRating(Ra: number, Rb: number, result: 1|0|0.5, K: number): [number, number] {
-        const Ea = 1 / (1 + Math.pow(10, (Rb - Ra) / 400));
-        const Eb = 1 / (1 + Math.pow(10, (Ra - Rb) / 400));
-
-        let newA: number = 0;
-        let newB: number = 0;
-        if (result === 1) {
-            newA = Ra + (K * (1 - Ea));
-            newB = Rb + (K * (0 - Eb));
-        } else if (result === 0) {
-            newA = Ra + (K * (0 - Ea));
-            newB = Rb + (K * (1 - Eb));
-        } else {
-            newA = Ra + (K * (0.5 - Ea));
-            newB = Rb + (K * (0.5 - Eb));
+        if (opts?.ratingStart !== undefined) {
+            this.ratingStart = opts.ratingStart;
         }
-        return [newA, newB];
+        if (opts?.rdStart !== undefined) {
+            this.rdStart = opts.rdStart;
+        }
+        if (opts?.volatilityStart !== undefined) {
+            this.volatilityStart = opts.volatilityStart;
+        }
+        if (opts?.tau !== undefined) {
+            this.tau = opts.tau;
+        }
     }
 
     public runProcessed(batch: APGameRecord[]): IRaterResults {
         const warnings: string[] = [];
         const errors: string[] = [];
 
-        // Sort by end date ascending
-        const sorted = [...batch];
-        sorted.sort((a, b) => { return a.header["date-end"].localeCompare(b.header["date-end"]); });
+        // examine each record and add each result to each player's opponent list
+        // process each player entry
 
-        const ratings: Map<string, IRating> = new Map();
+        const ratings: Map<string, IGlickoRating> = new Map(this.knownRatings);
+        const matches = new Map<string, [number,number,number][]>();
         const recids: Set<string> = new Set();
         let numRated = 0;
         for (let i = 0; i < batch.length; i++) {
-            const rec = sorted[i];
+            const rec = batch[i];
             // Can't rate without a game id
             if (rec.header.site.gameid === undefined) {
                 if (this.failHard) {
@@ -108,9 +105,11 @@ export class ELOBasic extends Rater {
             }
             const p1id = rec.header.site.name + "|" + p1.userid;
             const p2id = rec.header.site.name + "|" + p2.userid;
-            let p1rating: IRating = {
+            let p1rating: IGlickoRating = {
                 userid: p1id,
                 rating: this.ratingStart,
+                rd: this.rdStart,
+                volatility: this.volatilityStart,
                 recCount: 0,
                 wins: 0,
                 losses: 0,
@@ -119,9 +118,11 @@ export class ELOBasic extends Rater {
             if (ratings.has(p1id)) {
                 p1rating = ratings.get(p1id)!;
             }
-            let p2rating: IRating = {
+            let p2rating: IGlickoRating = {
                 userid: p2id,
                 rating: this.ratingStart,
+                rd: this.rdStart,
+                volatility: this.volatilityStart,
                 recCount: 0,
                 wins: 0,
                 losses: 0,
@@ -135,36 +136,45 @@ export class ELOBasic extends Rater {
             let result: 1|0|0.5 = 0.5;
             if (p1.result > p2.result) {
                 result = 1;
+                p1rating.wins++;
+                p2rating.losses++;
             } else if (p1.result < p2.result) {
                 result = 0;
-            }
-
-            // Calculate new ratings
-            const K = this.K(p1rating.rating, p1rating.recCount, p2rating.rating, p2rating.recCount);
-            const [newp1, newp2] = this.genRating(p1rating.rating, p2rating.rating, result, K);
-
-            // Update ratings
-            p1rating.rating = newp1;
-            p1rating.recCount++;
-            if (result === 1) {
-                p1rating.wins++;
-            } else if (result === 0) {
                 p1rating.losses++;
-            } else {
-                p1rating.draws++;
-            }
-            p2rating.rating = newp2;
-            p2rating.recCount++;
-            if (result === 1) {
-                p2rating.losses++;
-            } else if (result === 0) {
                 p2rating.wins++;
             } else {
                 p1rating.draws++;
+                p2rating.draws++;
             }
-            ratings.set(p1id, p1rating);
-            ratings.set(p2id, p2rating);
+
+            // add result to each player's list of matches
+            p1rating.recCount++;
+            if (matches.has(p1id)) {
+                const lst = matches.get(p1id)!;
+                matches.set(p1id, [...lst, [p2rating.rating, p2rating.rd, result]]);
+            } else {
+                matches.set(p1id, [[p2rating.rating, p2rating.rd, result]]);
+            }
+            p2rating.recCount++;
+            if (matches.has(p2id)) {
+                const lst = matches.get(p2id)!;
+                matches.set(p2id, [...lst, [p1rating.rating, p1rating.rd, result === 1 ? 0 : result === 0 ? 1 : result]]);
+            } else {
+                matches.set(p2id, [[p1rating.rating, p1rating.rd, result === 1 ? 0 : result === 0 ? 1 : result]]);
+            }
+
+            ratings.set(p1id, {...p1rating});
+            ratings.set(p2id, {...p2rating});
+
             numRated++;
+        }
+
+        // process each set of matches simultaneously
+        for (const [uid, matchlst] of matches.entries()) {
+            // fetch user record
+            const rating = ratings.get(uid)!;
+            const {rating: newRating, rd: newRd, vol: newSigma} = glicko2(rating.rating, rating.rd, rating.volatility, matchlst, {rating: this.ratingStart, tau: this.tau});
+            ratings.set(uid, {...rating, rating: newRating, rd: newRd, volatility: newSigma});
         }
 
         const results: IRaterResults = {

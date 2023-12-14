@@ -1,50 +1,50 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { APGameRecord } from "../schemas/gamerecord";
 import { Rater, IRaterOptions, IRaterResults, IRating } from "./_base";
+import { Rating, TrueSkill as TrueSkillEnv } from 'ts-trueskill';
 
 /**
- * This library only accepts a single K constant for all players.
  * This library also only works for two-player games.
  */
-export interface IELOOptions extends IRaterOptions {
-    K: (p1Rating: number, p1Games: number, p2Rating: number, p2Games: number) => number;
-    ratingStart: number;
+export interface ITrueskillOptions extends IRaterOptions {
+    muStart?: number;
+    sigmaStart?: number;
+    betaStart?: number;
+    tauStart?: number;
+    drawProbability?: number;
 }
 
-export class ELOBasic extends Rater {
-    private ratingStart = 1200;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private K = (p1Rating: number, p1Games: number, p2Rating: number, p2Games: number): number => { return 30; };
+export interface ITrueskillRating extends IRating {
+    sigma: number;
+}
 
-    constructor(opts?: IELOOptions) {
+export class Trueskill extends Rater {
+    private muStart: number|undefined = undefined;
+    private sigmaStart: number|undefined = undefined;
+    private betaStart: number|undefined = undefined;
+    private tauStart: number|undefined = undefined;
+    private drawProbability: number|undefined = undefined;
+    private env: TrueSkillEnv;
+
+    constructor(opts?: ITrueskillOptions) {
         super(opts);
         if (opts !== undefined) {
-            if (opts.K !== undefined) {
-                this.K = opts.K;
+            if (opts.muStart !== undefined) {
+                this.muStart = opts.muStart;
             }
-            if (opts.ratingStart !== undefined) {
-                this.ratingStart = opts.ratingStart;
+            if (opts.sigmaStart !== undefined) {
+                this.sigmaStart = opts.sigmaStart;
+            }
+            if (opts.betaStart !== undefined) {
+                this.betaStart = opts.betaStart;
+            }
+            if (this.tauStart !== undefined) {
+                this.tauStart = opts.tauStart
+            }
+            if (this.drawProbability !== undefined) {
+                this.drawProbability = opts.drawProbability;
             }
         }
-    }
-
-    private genRating(Ra: number, Rb: number, result: 1|0|0.5, K: number): [number, number] {
-        const Ea = 1 / (1 + Math.pow(10, (Rb - Ra) / 400));
-        const Eb = 1 / (1 + Math.pow(10, (Ra - Rb) / 400));
-
-        let newA: number = 0;
-        let newB: number = 0;
-        if (result === 1) {
-            newA = Ra + (K * (1 - Ea));
-            newB = Rb + (K * (0 - Eb));
-        } else if (result === 0) {
-            newA = Ra + (K * (0 - Ea));
-            newB = Rb + (K * (1 - Eb));
-        } else {
-            newA = Ra + (K * (0.5 - Ea));
-            newB = Rb + (K * (0.5 - Eb));
-        }
-        return [newA, newB];
+        this.env = new TrueSkillEnv(this.muStart, this.sigmaStart, this.betaStart, this.tauStart, this.drawProbability);
     }
 
     public runProcessed(batch: APGameRecord[]): IRaterResults {
@@ -55,7 +55,7 @@ export class ELOBasic extends Rater {
         const sorted = [...batch];
         sorted.sort((a, b) => { return a.header["date-end"].localeCompare(b.header["date-end"]); });
 
-        const ratings: Map<string, IRating> = new Map();
+        const ratings: Map<string, ITrueskillRating> = new Map();
         const recids: Set<string> = new Set();
         let numRated = 0;
         for (let i = 0; i < batch.length; i++) {
@@ -108,9 +108,11 @@ export class ELOBasic extends Rater {
             }
             const p1id = rec.header.site.name + "|" + p1.userid;
             const p2id = rec.header.site.name + "|" + p2.userid;
-            let p1rating: IRating = {
+            const {mu: muStart, sigma: sigmaStart} = this.env.createRating();
+            let p1rating: ITrueskillRating = {
                 userid: p1id,
-                rating: this.ratingStart,
+                rating: muStart,
+                sigma: sigmaStart,
                 recCount: 0,
                 wins: 0,
                 losses: 0,
@@ -119,9 +121,10 @@ export class ELOBasic extends Rater {
             if (ratings.has(p1id)) {
                 p1rating = ratings.get(p1id)!;
             }
-            let p2rating: IRating = {
+            let p2rating: ITrueskillRating = {
                 userid: p2id,
-                rating: this.ratingStart,
+                rating: muStart,
+                sigma: sigmaStart,
                 recCount: 0,
                 wins: 0,
                 losses: 0,
@@ -130,40 +133,36 @@ export class ELOBasic extends Rater {
             if (ratings.has(p2id)) {
                 p2rating = ratings.get(p2id)!;
             }
+            const ratingP1 = this.env.createRating(p1rating.rating, p1rating.sigma);
+            const ratingP2 = this.env.createRating(p2rating.rating, p2rating.sigma);
 
             // Get result (only relative magnitude matters)
-            let result: 1|0|0.5 = 0.5;
+            let ranks: [1|0,1|0];
             if (p1.result > p2.result) {
-                result = 1;
-            } else if (p1.result < p2.result) {
-                result = 0;
-            }
-
-            // Calculate new ratings
-            const K = this.K(p1rating.rating, p1rating.recCount, p2rating.rating, p2rating.recCount);
-            const [newp1, newp2] = this.genRating(p1rating.rating, p2rating.rating, result, K);
-
-            // Update ratings
-            p1rating.rating = newp1;
-            p1rating.recCount++;
-            if (result === 1) {
+                ranks = [0,1];
                 p1rating.wins++;
-            } else if (result === 0) {
-                p1rating.losses++;
-            } else {
-                p1rating.draws++;
-            }
-            p2rating.rating = newp2;
-            p2rating.recCount++;
-            if (result === 1) {
                 p2rating.losses++;
-            } else if (result === 0) {
+            } else if (p1.result < p2.result) {
+                ranks = [1,0];
+                p1rating.losses++;
                 p2rating.wins++;
             } else {
+                ranks = [0,0];
                 p1rating.draws++;
+                p2rating.draws++;
             }
-            ratings.set(p1id, p1rating);
-            ratings.set(p2id, p2rating);
+
+            // update rating
+            p1rating.recCount++;
+            p2rating.recCount++;
+            const [t1, t2] = this.env.rate([[ratingP1],[ratingP2]], ranks) as Rating[][];
+            p1rating.rating = t1[0].mu;
+            p1rating.sigma = t1[0].sigma;
+            p2rating.rating = t2[0].mu;
+            p2rating.sigma = t2[0].sigma;
+            ratings.set(p1id, {...p1rating});
+            ratings.set(p2id, {...p2rating});
+
             numRated++;
         }
 
