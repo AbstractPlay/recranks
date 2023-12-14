@@ -51,6 +51,6 @@
         "ajv-formats": "^2.1.1",
         "glicko2-lite": "^4.0.0",
         "nanoid": "^5.0.4",
-        "ts-trueskill": "^5.0.0"
+        "ts-trueskill": "^3.3.0"
     }
 }
