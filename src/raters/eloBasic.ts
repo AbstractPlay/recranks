@@ -160,7 +160,7 @@ export class ELOBasic extends Rater {
             } else if (result === 0) {
                 p2rating.wins++;
             } else {
-                p1rating.draws++;
+                p2rating.draws++;
             }
             ratings.set(p1id, p1rating);
             ratings.set(p2id, p2rating);
