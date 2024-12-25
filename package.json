@@ -6,7 +6,7 @@
     "types": "build/index.d.ts",
     "scripts": {
         "build": "npm run build-ts && npm run lint",
-        "build-ts": "tsc",
+        "build-ts": "npm run json2ts && tsc && shx cp ./src/schemas/gamerecord.d.ts ./build/schemas",
         "test": "mocha -r ts-node/register test/**/*.test.ts",
         "lint": "npx eslint \"src/**/*.ts\" -c .eslintrc.js",
         "dist-dev": "webpack",
@@ -51,6 +51,7 @@
         "ajv-formats": "^2.1.1",
         "glicko2-lite": "^4.0.0",
         "nanoid": "^5.0.4",
+        "shx": "^0.3.4",
         "ts-trueskill": "^3.3.0"
     }
 }
