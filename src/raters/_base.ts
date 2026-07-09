@@ -40,6 +40,9 @@ export abstract class Rater {
                 this.failHard = opts.failHard;
             }
             if (opts.minRounds !== undefined) {
+                if (opts.minRounds < 0) {
+                    throw new Error(`minRounds must be >= 0, got ${opts.minRounds}`);
+                }
                 this.minRounds = opts.minRounds;
             }
             if (opts.respectUnrated !== undefined) {
@@ -50,6 +53,27 @@ export abstract class Rater {
         const ajv = new Ajv({allowUnionTypes: true});
         addFormats(ajv);
         this.validate = ajv.compile(schema);
+    }
+
+    protected checkSelfPlay(p1id: string, p2id: string, recid: string): string | null {
+        if (p1id === p2id) {
+            return `Record ${recid} has the same user ID for both players. Skipping.`;
+        }
+        return null;
+    }
+
+    protected checkContradictoryResults(p1Result: number, p2Result: number, recid: string): string | null {
+        if (p1Result === p2Result && (p1Result === 1 || p1Result === 0)) {
+            return `Record ${recid} has contradictory results (both players have result ${p1Result}). Skipping.`;
+        }
+        if (Number.isNaN(p1Result) || Number.isNaN(p2Result)) {
+            return `Record ${recid} has invalid (NaN) player results. Skipping.`;
+        }
+        return null;
+    }
+
+    protected roundCount(rec: APGameRecord): number {
+        return rec.moves?.length ?? 0;
     }
 
     public abstract runProcessed(batch: APGameRecord[]): IRaterResults;
