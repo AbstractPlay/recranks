@@ -19,9 +19,9 @@ jobs:
     #     # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Use Node.js 18.x
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 18.x
         cache: 'npm'
@@ -32,7 +32,7 @@ jobs:
     - run: npm run build
     - run: npm pack
     - name: Upload
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: package
         path: "*.tgz"
@@ -41,11 +41,11 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-        - name: Upload
-          uses: actions/download-artifact@v3
+        - name: Download
+          uses: actions/download-artifact@v4
           with:
               name: package
-        - uses: actions/setup-node@v3
+        - uses: actions/setup-node@v4
           with:
             node-version: 18.x
             registry-url: https://npm.pkg.github.com/
