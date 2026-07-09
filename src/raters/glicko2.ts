@@ -6,11 +6,11 @@ import glicko2 from "glicko2-lite";
  * This library also only works for two-player games.
  */
 export interface IGlickoOptions extends IRaterOptions {
-    knownRatings: Map<string, IGlickoRating>;
-    ratingStart: number;
-    rdStart: number;
-    volatilityStart: number;
-    tau: number;
+    knownRatings?: Map<string, IGlickoRating>;
+    ratingStart?: number;
+    rdStart?: number;
+    volatilityStart?: number;
+    tau?: number;
 }
 
 export interface IGlickoRating extends IRating {
@@ -18,6 +18,14 @@ export interface IGlickoRating extends IRating {
     volatility: number;
 }
 
+/**
+ * Glicko-2 rating engine for two-player games.
+ *
+ * Unlike ELO and TrueSkill in this library, Glicko-2 uses a batch rating-period
+ * model: all games in a batch are aggregated against each opponent's rating at
+ * period start, then one update is applied per player. Games are sorted by
+ * date-end before processing so win/loss/draw counts match chronological order.
+ */
 export class Glicko2 extends Rater {
     private ratingStart = 1500;
     private rdStart = 350;
@@ -48,21 +56,24 @@ export class Glicko2 extends Rater {
         const warnings: string[] = [];
         const errors: string[] = [];
 
-        // examine each record and add each result to each player's opponent list
-        // process each player entry
+        // Sort by end date ascending (consistent with ELO/TrueSkill)
+        const sorted = [...batch];
+        sorted.sort((a, b) => { return a.header["date-end"].localeCompare(b.header["date-end"]); });
 
         const ratings: Map<string, IGlickoRating> = new Map(this.knownRatings);
         const matches = new Map<string, [number,number,number][]>();
         const recids: Set<string> = new Set();
         let numRated = 0;
         for (let i = 0; i < batch.length; i++) {
-            const rec = batch[i];
+            const rec = sorted[i];
             // Can't rate without a game id
             if (rec.header.site.gameid === undefined) {
+                const siteName = rec.header.site.name || "unknown";
+                const missingIdMsg = `Record ${siteName}|(no game ID) does not have a game ID. This should never happen.`;
                 if (this.failHard) {
-                    throw new Error(`Record ${i} does not have a game ID. This should never happen.`);
+                    throw new Error(missingIdMsg);
                 }
-                errors.push(`Record ${i} does not have a game ID. This should never happen.`);
+                errors.push(missingIdMsg);
                 continue;
             }
             const recid = rec.header.site.name + "|" + rec.header.site.gameid;
@@ -92,7 +103,7 @@ export class Glicko2 extends Rater {
             }
 
             // Check for minimum number of rounds
-            if (rec.moves.length < this.minRounds) {
+            if (this.roundCount(rec) < this.minRounds) {
                 warnings.push(`Record ${recid} lasted fewer than ${this.minRounds} rounds. Skipping.`);
                 continue;
             }
@@ -105,6 +116,24 @@ export class Glicko2 extends Rater {
             }
             const p1id = rec.header.site.name + "|" + p1.userid;
             const p2id = rec.header.site.name + "|" + p2.userid;
+
+            const selfPlayMsg = this.checkSelfPlay(p1id, p2id, recid);
+            if (selfPlayMsg !== null) {
+                if (this.failHard) {
+                    throw new Error(selfPlayMsg);
+                }
+                warnings.push(selfPlayMsg);
+                continue;
+            }
+
+            const contradictoryMsg = this.checkContradictoryResults(p1.result, p2.result, recid);
+            if (contradictoryMsg !== null) {
+                if (this.failHard) {
+                    throw new Error(contradictoryMsg);
+                }
+                warnings.push(contradictoryMsg);
+                continue;
+            }
             let p1rating: IGlickoRating = {
                 userid: p1id,
                 rating: this.ratingStart,

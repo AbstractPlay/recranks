@@ -1,0 +1,7 @@
+[
+  { "slug": "index", "title": "Overview" },
+  { "slug": "game-records", "title": "Game records" },
+  { "slug": "api", "title": "API" },
+  { "slug": "raters", "title": "Rating algorithms" },
+  { "slug": "schema-reference", "title": "Schema reference" }
+]

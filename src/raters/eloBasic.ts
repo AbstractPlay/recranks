@@ -7,8 +7,8 @@ import { Rater, IRaterOptions, IRaterResults, IRating } from "./_base";
  * This library also only works for two-player games.
  */
 export interface IELOOptions extends IRaterOptions {
-    K: (p1Rating: number, p1Games: number, p2Rating: number, p2Games: number) => number;
-    ratingStart: number;
+    K?: (p1Rating: number, p1Games: number, p2Rating: number, p2Games: number) => number;
+    ratingStart?: number;
 }
 
 export class ELOBasic extends Rater {
@@ -62,10 +62,12 @@ export class ELOBasic extends Rater {
             const rec = sorted[i];
             // Can't rate without a game id
             if (rec.header.site.gameid === undefined) {
+                const siteName = rec.header.site.name || "unknown";
+                const missingIdMsg = `Record ${siteName}|(no game ID) does not have a game ID. This should never happen.`;
                 if (this.failHard) {
-                    throw new Error(`Record ${i} does not have a game ID. This should never happen.`);
+                    throw new Error(missingIdMsg);
                 }
-                errors.push(`Record ${i} does not have a game ID. This should never happen.`);
+                errors.push(missingIdMsg);
                 continue;
             }
             const recid = rec.header.site.name + "|" + rec.header.site.gameid;
@@ -95,7 +97,7 @@ export class ELOBasic extends Rater {
             }
 
             // Check for minimum number of rounds
-            if (rec.moves.length < this.minRounds) {
+            if (this.roundCount(rec) < this.minRounds) {
                 warnings.push(`Record ${recid} lasted fewer than ${this.minRounds} rounds. Skipping.`);
                 continue;
             }
@@ -108,6 +110,24 @@ export class ELOBasic extends Rater {
             }
             const p1id = rec.header.site.name + "|" + p1.userid;
             const p2id = rec.header.site.name + "|" + p2.userid;
+
+            const selfPlayMsg = this.checkSelfPlay(p1id, p2id, recid);
+            if (selfPlayMsg !== null) {
+                if (this.failHard) {
+                    throw new Error(selfPlayMsg);
+                }
+                warnings.push(selfPlayMsg);
+                continue;
+            }
+
+            const contradictoryMsg = this.checkContradictoryResults(p1.result, p2.result, recid);
+            if (contradictoryMsg !== null) {
+                if (this.failHard) {
+                    throw new Error(contradictoryMsg);
+                }
+                warnings.push(contradictoryMsg);
+                continue;
+            }
             let p1rating: IRating = {
                 userid: p1id,
                 rating: this.ratingStart,

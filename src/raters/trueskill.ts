@@ -37,10 +37,10 @@ export class Trueskill extends Rater {
             if (opts.betaStart !== undefined) {
                 this.betaStart = opts.betaStart;
             }
-            if (this.tauStart !== undefined) {
-                this.tauStart = opts.tauStart
+            if (opts.tauStart !== undefined) {
+                this.tauStart = opts.tauStart;
             }
-            if (this.drawProbability !== undefined) {
+            if (opts.drawProbability !== undefined) {
                 this.drawProbability = opts.drawProbability;
             }
         }
@@ -62,10 +62,12 @@ export class Trueskill extends Rater {
             const rec = sorted[i];
             // Can't rate without a game id
             if (rec.header.site.gameid === undefined) {
+                const siteName = rec.header.site.name || "unknown";
+                const missingIdMsg = `Record ${siteName}|(no game ID) does not have a game ID. This should never happen.`;
                 if (this.failHard) {
-                    throw new Error(`Record ${i} does not have a game ID. This should never happen.`);
+                    throw new Error(missingIdMsg);
                 }
-                errors.push(`Record ${i} does not have a game ID. This should never happen.`);
+                errors.push(missingIdMsg);
                 continue;
             }
             const recid = rec.header.site.name + "|" + rec.header.site.gameid;
@@ -95,7 +97,7 @@ export class Trueskill extends Rater {
             }
 
             // Check for minimum number of rounds
-            if (rec.moves.length < this.minRounds) {
+            if (this.roundCount(rec) < this.minRounds) {
                 warnings.push(`Record ${recid} lasted fewer than ${this.minRounds} rounds. Skipping.`);
                 continue;
             }
@@ -108,6 +110,24 @@ export class Trueskill extends Rater {
             }
             const p1id = rec.header.site.name + "|" + p1.userid;
             const p2id = rec.header.site.name + "|" + p2.userid;
+
+            const selfPlayMsg = this.checkSelfPlay(p1id, p2id, recid);
+            if (selfPlayMsg !== null) {
+                if (this.failHard) {
+                    throw new Error(selfPlayMsg);
+                }
+                warnings.push(selfPlayMsg);
+                continue;
+            }
+
+            const contradictoryMsg = this.checkContradictoryResults(p1.result, p2.result, recid);
+            if (contradictoryMsg !== null) {
+                if (this.failHard) {
+                    throw new Error(contradictoryMsg);
+                }
+                warnings.push(contradictoryMsg);
+                continue;
+            }
             const {mu: muStart, sigma: sigmaStart} = this.env.createRating();
             let p1rating: ITrueskillRating = {
                 userid: p1id,
