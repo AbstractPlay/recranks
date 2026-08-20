@@ -2,6 +2,7 @@
 import { GameFactory, gameinfo, APGamesInformation, GameBase } from "@abstractplay/gameslib";
 import { readFileSync } from "fs";
 import { APGameRecord } from "../src";
+import { movesInReplayOrder } from "../src/turnModel";
 
 interface IInvalid {
     recid: string;
@@ -48,7 +49,8 @@ for (const rec of recs) {
         throw new Error("Could not instantiate game");
     }
     for (const round of rec.moves) {
-        for (const move of round) {
+        const ordered = movesInReplayOrder(round, rec);
+        for (const move of ordered) {
             try {
                 if (move === null) {
                     continue;

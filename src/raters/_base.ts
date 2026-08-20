@@ -2,6 +2,7 @@ import Ajv, {type ValidateFunction} from "ajv";
 import addFormats from "ajv-formats";
 import { APGameRecord } from "../schemas/gamerecord"
 import schema from "../schemas/gamerecord.json";
+import { countRecordMoves, turnModelFromRecord } from "../turnModel";
 
 export interface IRaterOptions {
     failHard?: boolean;
@@ -73,6 +74,9 @@ export abstract class Rater {
     }
 
     protected roundCount(rec: APGameRecord): number {
+        if (turnModelFromRecord(rec) !== undefined) {
+            return countRecordMoves(rec);
+        }
         return rec.moves?.length ?? 0;
     }
 
