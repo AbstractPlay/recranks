@@ -126,6 +126,10 @@ export interface APGameRecord {
      * Some games have variable starting conditions (like Alien City). This string should describe that position.
      */
     startingPosition?: string;
+    /**
+     * How move rows relate to plies and seating. Omitted on legacy records; consumers fall back to stride replay and rec.moves.length.
+     */
+    "turn-model"?: "sequential" | "simultaneous" | "sequenced" | "skip-turn";
     [k: string]: unknown;
   };
   /**

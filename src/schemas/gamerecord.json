@@ -125,6 +125,16 @@
                 "startingPosition": {
                     "description": "Some games have variable starting conditions (like Alien City). This string should describe that position.",
                     "type": "string"
+                },
+                "turn-model": {
+                    "description": "How move rows relate to plies and seating. Omitted on legacy records; consumers fall back to stride replay and rec.moves.length.",
+                    "type": "string",
+                    "enum": [
+                        "sequential",
+                        "simultaneous",
+                        "sequenced",
+                        "skip-turn"
+                    ]
                 }
             },
             "additionalProperties": true,
