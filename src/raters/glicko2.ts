@@ -2,6 +2,19 @@ import { APGameRecord } from "../schemas/gamerecord";
 import { Rater, IRaterOptions, IRaterResults, IRating } from "./_base";
 import glicko2 from "glicko2-lite";
 
+/** Glicko-2 scale factor (rating and RD ↔ μ and φ). */
+export const GLICKO2_SCALE = 173.7178;
+
+/**
+ * Glicko-2 Step 6 for a player with no games in the rating period:
+ * rating and volatility unchanged; RD widens to φ* = √(φ² + σ²).
+ */
+export const applyInactiveGlickoRd = (rating: number, rd: number, volatility: number): number => {
+    const phi = rd / GLICKO2_SCALE;
+    const phiStar = Math.sqrt(phi * phi + volatility * volatility);
+    return GLICKO2_SCALE * phiStar;
+};
+
 /**
  * This library also only works for two-player games.
  */
@@ -204,6 +217,17 @@ export class Glicko2 extends Rater {
             const rating = ratings.get(uid)!;
             const {rating: newRating, rd: newRd, vol: newSigma} = glicko2(rating.rating, rating.rd, rating.volatility, matchlst, {rating: this.ratingStart, tau: this.tau});
             ratings.set(uid, {...rating, rating: newRating, rd: newRd, volatility: newSigma});
+        }
+
+        // Step 6 for players in knownRatings who did not compete this period
+        for (const [uid, rating] of ratings.entries()) {
+            if (matches.has(uid)) {
+                continue;
+            }
+            ratings.set(uid, {
+                ...rating,
+                rd: applyInactiveGlickoRd(rating.rating, rating.rd, rating.volatility),
+            });
         }
 
         const results: IRaterResults = {
