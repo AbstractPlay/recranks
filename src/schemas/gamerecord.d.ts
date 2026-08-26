@@ -96,6 +96,14 @@ export interface APGameRecord {
          * This is how the system determines who won. Each player should be given a number. Players who share the same number are scored as tied in their bracket. Higher numbers indicate 'more winning' players (e.g., a group of players with a result of 2 are considered as having beat any group of players with a result of less than 2). For two-player games, stick with convention: winners are given a result of 1 and losers are given a result of 0 (though the exact number is insignificant; you could just as easily give them a result of 100 and 3; what matters are the relative magnitudes). For a two-player draw, just give each player the same number. For games with more than two players, group and order them in whatever way makes sense for your game. The recranks system will have certain default behaviours and will also be tailored for specific games where necessary.
          */
         result: number;
+        /**
+         * Solo graded play: stable tier id achieved (e.g. good). Not translated prose.
+         */
+        grade?: string;
+        /**
+         * Solo binary play: whether the run passed.
+         */
+        passed?: boolean;
         [k: string]: unknown;
       },
       ...{
@@ -119,6 +127,14 @@ export interface APGameRecord {
          * This is how the system determines who won. Each player should be given a number. Players who share the same number are scored as tied in their bracket. Higher numbers indicate 'more winning' players (e.g., a group of players with a result of 2 are considered as having beat any group of players with a result of less than 2). For two-player games, stick with convention: winners are given a result of 1 and losers are given a result of 0 (though the exact number is insignificant; you could just as easily give them a result of 100 and 3; what matters are the relative magnitudes). For a two-player draw, just give each player the same number. For games with more than two players, group and order them in whatever way makes sense for your game. The recranks system will have certain default behaviours and will also be tailored for specific games where necessary.
          */
         result: number;
+        /**
+         * Solo graded play: stable tier id achieved (e.g. good). Not translated prose.
+         */
+        grade?: string;
+        /**
+         * Solo binary play: whether the run passed.
+         */
+        passed?: boolean;
         [k: string]: unknown;
       }[]
     ];
@@ -130,6 +146,22 @@ export interface APGameRecord {
      * How move rows relate to plies and seating. Omitted on legacy records; consumers fall back to stride replay and rec.moves.length.
      */
     "turn-model"?: "sequential" | "simultaneous" | "sequenced" | "skip-turn";
+    /**
+     * Solo play outcome model. When present, players[0] carries the solo result (score, grade, or passed).
+     */
+    "outcome-type"?: "binary" | "graded" | "score" | "timed";
+    /**
+     * Whether higher or lower players[0].score ranks better on solo leaderboards. Always lower for timed (elapsed ms).
+     */
+    "score-direction"?: "higher" | "lower";
+    /**
+     * Optional English axis label for solo score display (e.g. moves, points, time). Live UI may use i18n keys from the game engine.
+     */
+    "score-label"?: string;
+    /**
+     * Challenge setup id for seeded solo play (GameRng). The platform assigns a concrete string before the first random event — either supplied at create (daily puzzle, rematch, shared link) or generated when create omits a seed. gameslib genRecord() MUST copy this to header.challenge-seed on every completed archive when the run used GameRng, so the player can replay, share, and compete on same-seed leaderboards. Same seed + variant reproduces identical random events. Omitted only on solo records that do not use seeded RNG.
+     */
+    "challenge-seed"?: string;
     [k: string]: unknown;
   };
   /**

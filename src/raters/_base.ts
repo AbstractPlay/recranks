@@ -80,6 +80,11 @@ export abstract class Rater {
         return rec.moves?.length ?? 0;
     }
 
+    /** Competitive raters only process head-to-head (2-player) records. */
+    protected isCompetitiveRecord(rec: APGameRecord): boolean {
+        return rec.header.players.length === 2;
+    }
+
     public abstract runProcessed(batch: APGameRecord[]): IRaterResults;
 
     public run(batch: string[]): IRaterResults {
