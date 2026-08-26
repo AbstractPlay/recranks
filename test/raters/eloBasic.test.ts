@@ -71,4 +71,19 @@ describe("ELO Basic", () => {
     it("rejects negative minRounds", () => {
         expect(() => new ELOBasic({ minRounds: -1 })).to.throw("minRounds must be >= 0");
     });
+
+    it("skips solo records without errors", () => {
+        const rater = new ELOBasic({ minRounds: 0 });
+        const rec = makeGameRecord({ gameid: "solo-1" });
+        rec.header.players = [{
+            name: "Solo",
+            userid: "solo-user",
+            result: 73,
+            score: 73,
+        }];
+        const result = rater.runProcessed([rec]);
+
+        expect(result.recsRated).to.equal(0);
+        expect(result.errors ?? []).to.have.lengthOf(0);
+    });
 });

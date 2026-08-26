@@ -101,12 +101,7 @@ export class Glicko2 extends Rater {
             }
             recids.add(recid);
 
-            // Check for required number of players
-            if (rec.header.players.length !== 2) {
-                if (this.failHard) {
-                    throw new Error(`This engine can only rate two-player games. Record ${recid} has ${rec.header.players.length}.`);
-                }
-                errors.push(`This engine can only rate two-player games. Record ${recid} has ${rec.header.players.length}.`);
+            if (!this.isCompetitiveRecord(rec)) {
                 continue;
             }
 

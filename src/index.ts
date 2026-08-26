@@ -9,6 +9,24 @@ import {
     type TurnModel,
     SIMULTANEOUS_ELIM_TOKEN,
 } from "./turnModel";
+import {
+    collectSoloArchiveWarnings,
+    collectSoloOutcomeErrors,
+    flattenRecordMoves,
+    isSeededSoloRecord,
+    isSoloRecord,
+    validateSeededSoloReplay,
+    type SoloOutcomeType,
+    type ScoreDirection,
+    type SoloReplayFactory,
+} from "./soloValidate";
+import {
+    buildSoloLeaderboards,
+    soloAttemptIsBetter,
+    soloLeaderboardBucket,
+    soloLeaderboardToCsv,
+    type ISoloLeaderboardRow,
+} from "./soloLeaderboard";
 
 export {
     IRaterOptions,
@@ -30,4 +48,18 @@ export {
     countRecordMoveSlots,
     movesInReplayOrder,
     SIMULTANEOUS_ELIM_TOKEN,
+    collectSoloArchiveWarnings,
+    collectSoloOutcomeErrors,
+    flattenRecordMoves,
+    isSeededSoloRecord,
+    isSoloRecord,
+    validateSeededSoloReplay,
+    SoloOutcomeType,
+    ScoreDirection,
+    SoloReplayFactory,
+    buildSoloLeaderboards,
+    soloAttemptIsBetter,
+    soloLeaderboardBucket,
+    soloLeaderboardToCsv,
+    ISoloLeaderboardRow,
 };
