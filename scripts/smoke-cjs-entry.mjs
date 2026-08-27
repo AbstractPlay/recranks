@@ -1,0 +1,19 @@
+/* eslint-env node */
+import { createRequire } from "module";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const require = createRequire(import.meta.url);
+const entry = path.join(ROOT, "build", "index.js");
+
+try {
+  const rr = require(entry);
+  if (typeof rr.ELOBasic !== "function" || typeof rr.Glicko2 !== "function") {
+    throw new Error("build/index.js missing expected raters");
+  }
+  console.log("smoke-cjs-entry: require(build/index.js) OK");
+} catch (error) {
+  console.error(`smoke-cjs-entry: ${error.message}`);
+  process.exit(1);
+}
