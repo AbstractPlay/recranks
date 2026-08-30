@@ -14,9 +14,9 @@ try {
     if (typeof Trueskill !== "function") {
         throw new Error("build/index.js missing Trueskill");
     }
-    console.log("smoke-esm-entry: import(build/index.js) OK");
+    console.log("smoke-package-entry: import(build/index.js) OK");
 } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`smoke-esm-entry: ${message}`);
+    console.error(`smoke-package-entry: ${message}`);
     process.exit(1);
 }

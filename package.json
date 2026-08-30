@@ -24,7 +24,7 @@
         "build-ts": "tsc",
         "typecheck": "tsc --noEmit",
         "pretest": "npm run typecheck",
-        "test:postbuild": "node scripts/smoke-esm-entry.mjs",
+        "test:postbuild": "node scripts/smoke-package-entry.mjs",
         "test": "mocha",
         "lint": "npx eslint \"src/**/*.ts\" -c .eslintrc.cjs",
         "json2ts": "npx json2ts -i src/schemas/gamerecord.json -o src/schemas/gamerecord.d.ts "
