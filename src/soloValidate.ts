@@ -1,4 +1,4 @@
-import type { APGameRecord } from "./schemas/gamerecord";
+import type { APGameRecord } from "./schemas/gamerecord.js";
 
 export type SoloOutcomeType = "binary" | "graded" | "score" | "timed";
 export type ScoreDirection = "higher" | "lower";
