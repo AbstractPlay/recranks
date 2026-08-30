@@ -1,5 +1,5 @@
-import { APGameRecord } from "../schemas/gamerecord";
-import { Rater, IRaterOptions, IRaterResults, IRating } from "./_base";
+import { APGameRecord } from "../schemas/gamerecord.js";
+import { Rater, IRaterOptions, IRaterResults, IRating } from "./_base.js";
 import { Rating, TrueSkill as TrueSkillEnv } from 'ts-trueskill';
 
 /**

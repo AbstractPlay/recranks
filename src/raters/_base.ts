@@ -1,8 +1,16 @@
-import Ajv, {type ValidateFunction} from "ajv";
-import addFormats from "ajv-formats";
-import { APGameRecord } from "../schemas/gamerecord"
-import schema from "../schemas/gamerecord.json";
-import { countRecordMoves, turnModelFromRecord } from "../turnModel";
+import AjvImport from "ajv";
+import type { ValidateFunction } from "ajv";
+import addFormatsImport from "ajv-formats";
+import { APGameRecord } from "../schemas/gamerecord.js";
+import schema from "../schemas/gamerecord.json" with { type: "json" };
+import { countRecordMoves, turnModelFromRecord } from "../turnModel.js";
+
+/** NodeNext mis-types ajv's default export as a module namespace. */
+type AjvInstance = {
+    compile(jsonSchema: object): ValidateFunction;
+};
+const ajvCtor = AjvImport as unknown as new (opts?: { allowUnionTypes?: boolean }) => AjvInstance;
+const addFormats = addFormatsImport as unknown as (ajv: AjvInstance) => void;
 
 export interface IRaterOptions {
     failHard?: boolean;
@@ -51,7 +59,7 @@ export abstract class Rater {
             }
         }
 
-        const ajv = new Ajv({allowUnionTypes: true});
+        const ajv = new ajvCtor({allowUnionTypes: true});
         addFormats(ajv);
         this.validate = ajv.compile(schema);
     }

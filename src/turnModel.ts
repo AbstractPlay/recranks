@@ -1,4 +1,4 @@
-import type { APGameRecord } from "./schemas/gamerecord";
+import type { APGameRecord } from "./schemas/gamerecord.js";
 
 export type TurnModel = "sequential" | "simultaneous" | "sequenced" | "skip-turn";
 

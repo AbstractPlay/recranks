@@ -1,5 +1,5 @@
-import type { APGameRecord } from "./schemas/gamerecord";
-import { soloHeader, type ScoreDirection, type ISoloRecordPlayer } from "./soloValidate";
+import type { APGameRecord } from "./schemas/gamerecord.js";
+import { soloHeader, type ScoreDirection, type ISoloRecordPlayer } from "./soloValidate.js";
 
 export interface ISoloLeaderboardRow {
     userid: string;
