@@ -12,6 +12,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    outputs:
+      recranks_version: ${{ steps.capture_version.outputs.recranks_version }}
 
     # strategy:
     #   matrix:
@@ -31,6 +33,9 @@ jobs:
     - run: npm test
     # prerelease --preid=ci-$GITHUB_RUN_ID
     - run: npm version prerelease --preid=ci-$GITHUB_RUN_ID --no-git-tag-version
+    - id: capture_version
+      run: |
+        echo "recranks_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
     - run: npm run build
     - run: npm pack
     - name: Upload
@@ -65,6 +70,7 @@ jobs:
         fi
 
   publish:
+    if: github.event_name == 'push'
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -85,24 +91,23 @@ jobs:
             NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   relay:
-    needs: [publish]
+    if: github.event_name == 'push'
+    needs: [build, publish]
     runs-on: ubuntu-latest
     steps:
       - name: Trigger gameslib build and test
+        env:
+          RECRANKS_VERSION: ${{ needs.build.outputs.recranks_version }}
+          SOURCE_RUN_ID: ${{ github.run_id }}
         run: |
+          payload=$(jq -n \
+            --arg v "$RECRANKS_VERSION" \
+            --arg s "$SOURCE_RUN_ID" \
+            '{event_type:"dep_update_prod", client_payload:{recranks_version:$v, source_run_id:$s}}')
           curl -L \
           -X POST \
           -H "Accept: application/vnd.github+json" \
           -H "Authorization: Bearer ${{ secrets.PAT_WORKFLOWS }}" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
           https://api.github.com/repos/abstractplay/gameslib/dispatches \
-          -d '{"event_type": "dep_update_prod"}'
-      - name: Trigger backend-crons build and test
-        run: |
-          curl -L \
-          -X POST \
-          -H "Accept: application/vnd.github+json" \
-          -H "Authorization: Bearer ${{ secrets.PAT_WORKFLOWS }}" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          https://api.github.com/repos/AbstractPlay/backend-crons/dispatches \
-          -d '{"event_type": "dep_update_prod"}'
+          -d "$payload"
