@@ -115,12 +115,12 @@ export class Trueskill extends Rater {
                 continue;
             }
 
-            const contradictoryMsg = this.checkContradictoryResults(p1.result, p2.result, recid);
-            if (contradictoryMsg !== null) {
+            const invalidResultsMsg = this.checkInvalidPlayerResults(p1.result, p2.result, recid);
+            if (invalidResultsMsg !== null) {
                 if (this.failHard) {
-                    throw new Error(contradictoryMsg);
+                    throw new Error(invalidResultsMsg);
                 }
-                warnings.push(contradictoryMsg);
+                warnings.push(invalidResultsMsg);
                 continue;
             }
             const {mu: muStart, sigma: sigmaStart} = this.env.createRating();
