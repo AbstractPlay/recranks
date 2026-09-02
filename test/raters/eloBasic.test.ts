@@ -48,14 +48,32 @@ describe("ELO Basic", () => {
         expect(result.warnings![0]).to.include("same user ID");
     });
 
-    it("skips contradictory results (both result 1) with a warning", () => {
+    it("leaves ratings unchanged for a draw when both players have result 1", () => {
         const rater = new ELOBasic({ minRounds: 0 });
         const rec = makeGameRecord({ gameid: "g1", p1Result: 1, p2Result: 1 });
         const result = rater.runProcessed([rec]);
 
-        expect(result.recsRated).to.equal(0);
-        expect(result.warnings).to.have.lengthOf(1);
-        expect(result.warnings![0]).to.include("contradictory");
+        expect(result.recsRated).to.equal(1);
+        const p1 = result.ratings.get("Abstract Play|user1")!;
+        const p2 = result.ratings.get("Abstract Play|user2")!;
+        expect(p1.rating).to.equal(1200);
+        expect(p2.rating).to.equal(1200);
+        expect(p1.draws).to.equal(1);
+        expect(p2.draws).to.equal(1);
+    });
+
+    it("leaves ratings unchanged for a draw when both players have result 0", () => {
+        const rater = new ELOBasic({ minRounds: 0 });
+        const rec = makeGameRecord({ gameid: "g1", p1Result: 0, p2Result: 0 });
+        const result = rater.runProcessed([rec]);
+
+        expect(result.recsRated).to.equal(1);
+        const p1 = result.ratings.get("Abstract Play|user1")!;
+        const p2 = result.ratings.get("Abstract Play|user2")!;
+        expect(p1.rating).to.equal(1200);
+        expect(p2.rating).to.equal(1200);
+        expect(p1.draws).to.equal(1);
+        expect(p2.draws).to.equal(1);
     });
 
     it("skips records with too few rounds", () => {

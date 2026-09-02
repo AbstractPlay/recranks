@@ -47,4 +47,4 @@ When building each player's match list, win/loss scores are inverted for the opp
 
 ## Invalid data handling
 
-All engines skip records with self-play, contradictory results (both `1` or both `0`), missing user IDs, or insufficient rounds. See [Game records](/recranks/game-records/) for details.
+All engines skip records with self-play, invalid player results (`NaN`), missing user IDs, or insufficient rounds. Equal `result` values are draws. See [Game records](/recranks/game-records/) for details.

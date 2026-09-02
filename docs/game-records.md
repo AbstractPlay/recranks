@@ -31,8 +31,7 @@ See the [schema reference](/recranks/schema-reference/) for a generated field li
 Each player gets a `result` number. Higher numbers indicate better performance. For two-player games:
 
 - Winner: `1`, loser: `0` (convention)
-- Draw: same number for both players (e.g. both `2`)
-- Both `1` or both `0` is treated as contradictory data and skipped
+- Draw: same `result` for both players (e.g. both `1`, both `0`, or both `2`)
 
 ### Moves
 
@@ -66,7 +65,7 @@ Raters skip (with warnings) records that have:
 
 - Missing or empty `userid` for either player
 - Same `userid` for both players (self-play)
-- Contradictory results (both `result: 1` or both `result: 0`)
+- Invalid `result` values (`NaN`)
 - Fewer rounds than `minRounds`
 
 **Solo records** (`players.length === 1`) are skipped silently — competitive raters only process two-player games.
@@ -82,4 +81,4 @@ When a solo title uses `GameRng` (`initRng` / `challengeSeed` on game state), th
 
 Solo records with `challenge-seed` can be replay-validated via `validateSeededSoloReplay()` (see `bin/validate.ts`). Same-seed leaderboards group on `(game.name, variants, challenge-seed)`.
 
-Set `failHard: true` to throw instead of warning for self-play and contradictory results.
+Set `failHard: true` to throw instead of warning for self-play and invalid player results.

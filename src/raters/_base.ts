@@ -71,10 +71,7 @@ export abstract class Rater {
         return null;
     }
 
-    protected checkContradictoryResults(p1Result: number, p2Result: number, recid: string): string | null {
-        if (p1Result === p2Result && (p1Result === 1 || p1Result === 0)) {
-            return `Record ${recid} has contradictory results (both players have result ${p1Result}). Skipping.`;
-        }
+    protected checkInvalidPlayerResults(p1Result: number, p2Result: number, recid: string): string | null {
         if (Number.isNaN(p1Result) || Number.isNaN(p2Result)) {
             return `Record ${recid} has invalid (NaN) player results. Skipping.`;
         }
