@@ -67,5 +67,8 @@
         "ajv-formats": "^2.1.1",
         "glicko2-lite": "^4.0.0",
         "ts-trueskill": "^5.1.0"
+    },
+    "overrides": {
+        "mathjs": "^15.2.0"
     }
 }
