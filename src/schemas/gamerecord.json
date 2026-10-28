@@ -54,6 +54,39 @@
                                 "string",
                                 "number"
                             ]
+                        },
+                        "playMode": {
+                            "description": "Realtime arena vs correspondence async play. When absent, treat as correspondence.",
+                            "type": "string",
+                            "enum": [
+                                "arena",
+                                "correspondence"
+                            ]
+                        },
+                        "arenaTcId": {
+                            "description": "Arena time-control catalog id when playMode is arena (e.g. blitz_5_3). Immutable snapshot identity for analytics and future rating pools.",
+                            "type": "string"
+                        },
+                        "arenaClock": {
+                            "description": "Fischer clock parameters (seconds) copied at arena game create. Survives catalog edits.",
+                            "type": "object",
+                            "properties": {
+                                "startSec": {
+                                    "type": "number"
+                                },
+                                "incSec": {
+                                    "type": "number"
+                                },
+                                "maxSec": {
+                                    "type": "number"
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "startSec",
+                                "incSec",
+                                "maxSec"
+                            ]
                         }
                     },
                     "additionalProperties": false,

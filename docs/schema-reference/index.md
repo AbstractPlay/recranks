@@ -38,6 +38,9 @@ Auto-generated from `gamerecord.json`. Narrative documentation is in [Game recor
 | --- | --- | --- |
 | `name` | no | For physical games, it should be the location of the game. For online games, use a consistent name for that service so t |
 | `gameid` | no | For online games, provide the unique game identifier for this game on the given site. This should be unique across the e |
+| `playMode` | no | Realtime arena vs correspondence async play. When absent, treat as correspondence. |
+| `arenaTcId` | no | Arena time-control catalog id when playMode is arena (e.g. blitz_5_3). |
+| `arenaClock` | no | Fischer clock parameters (seconds) copied at arena game create. |
 
 ## Player properties (`header.players[]`)
 

@@ -17,6 +17,9 @@ See the [schema reference](/recranks/schema-reference/) for a generated field li
 | `header.game.name` | Game name (must be consistent across services) |
 | `header.site.name` | Site identifier (e.g. `Abstract Play`) |
 | `header.site.gameid` | Unique game ID on the site (required for rating) |
+| `header.site.playMode` | `'arena'` or `'correspondence'`; **omit** for legacy correspondence records |
+| `header.site.arenaTcId` | Arena catalog time-control id (e.g. `blitz_5_3`) when `playMode` is `arena` |
+| `header.site.arenaClock` | Fischer parameters at game create: `{ startSec, incSec, maxSec }` (seconds) |
 | `header.date-end` | When the game ended (used for chronological rating) |
 | `header.players` | Player list with `userid`, `name`, and `result` |
 | `header.unrated` | When `true`, raters skip this record |

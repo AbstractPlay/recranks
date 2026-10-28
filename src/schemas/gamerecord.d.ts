@@ -48,6 +48,22 @@ export interface APGameRecord {
        * For online games, provide the unique game identifier for this game on the given site. This should be unique across the entire site. For physical games, you should omit this. When absent, the system will provide a random UUID.
        */
       gameid?: string | number;
+      /**
+       * Realtime arena vs correspondence async play. When absent, treat as correspondence.
+       */
+      playMode?: "arena" | "correspondence";
+      /**
+       * Arena time-control catalog id when playMode is arena (e.g. blitz_5_3). Immutable snapshot identity for analytics and future rating pools.
+       */
+      arenaTcId?: string;
+      /**
+       * Fischer clock parameters (seconds) copied at arena game create. Survives catalog edits.
+       */
+      arenaClock?: {
+        startSec: number;
+        incSec: number;
+        maxSec: number;
+      };
     };
     /**
      * Datetime the game started.
