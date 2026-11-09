@@ -110,6 +110,11 @@ export class Glicko2 extends Rater {
                 continue;
             }
 
+            const skipMode = this.competitiveSkipMode(rec);
+            if (skipMode === "both") {
+                continue;
+            }
+
             // Check for minimum number of rounds
             if (this.roundCount(rec) < this.minRounds) {
                 warnings.push(`Record ${recid} lasted fewer than ${this.minRounds} rounds. Skipping.`);
@@ -169,39 +174,44 @@ export class Glicko2 extends Rater {
                 p2rating = ratings.get(p2id)!;
             }
 
-            // Get result (only relative magnitude matters)
-            let result: 1|0|0.5 = 0.5;
-            if (p1.result > p2.result) {
-                result = 1;
-                p1rating.wins++;
-                p2rating.losses++;
-            } else if (p1.result < p2.result) {
-                result = 0;
-                p1rating.losses++;
-                p2rating.wins++;
-            } else {
-                p1rating.draws++;
-                p2rating.draws++;
-            }
+            const result = this.competitiveResult(rec);
+            const applyP1 = skipMode !== "p1";
+            const applyP2 = skipMode !== "p2";
+            const resultForP2 = result === 1 ? 0 : result === 0 ? 1 : 0.5;
+            const hadP1 = ratings.has(p1id);
+            const hadP2 = ratings.has(p2id);
 
-            // add result to each player's list of matches
-            p1rating.recCount++;
-            if (matches.has(p1id)) {
-                const lst = matches.get(p1id)!;
+            if (applyP1) {
+                if (result === 1) {
+                    p1rating.wins++;
+                } else if (result === 0) {
+                    p1rating.losses++;
+                } else {
+                    p1rating.draws++;
+                }
+                p1rating.recCount++;
+                const lst = matches.get(p1id) ?? [];
                 matches.set(p1id, [...lst, [p2rating.rating, p2rating.rd, result]]);
-            } else {
-                matches.set(p1id, [[p2rating.rating, p2rating.rd, result]]);
-            }
-            p2rating.recCount++;
-            if (matches.has(p2id)) {
-                const lst = matches.get(p2id)!;
-                matches.set(p2id, [...lst, [p1rating.rating, p1rating.rd, result === 1 ? 0 : result === 0 ? 1 : result]]);
-            } else {
-                matches.set(p2id, [[p1rating.rating, p1rating.rd, result === 1 ? 0 : result === 0 ? 1 : result]]);
+                ratings.set(p1id, { ...p1rating });
+            } else if (hadP1) {
+                ratings.set(p1id, { ...p1rating });
             }
 
-            ratings.set(p1id, {...p1rating});
-            ratings.set(p2id, {...p2rating});
+            if (applyP2) {
+                if (result === 1) {
+                    p2rating.losses++;
+                } else if (result === 0) {
+                    p2rating.wins++;
+                } else {
+                    p2rating.draws++;
+                }
+                p2rating.recCount++;
+                const lst = matches.get(p2id) ?? [];
+                matches.set(p2id, [...lst, [p1rating.rating, p1rating.rd, resultForP2]]);
+                ratings.set(p2id, { ...p2rating });
+            } else if (hadP2) {
+                ratings.set(p2id, { ...p2rating });
+            }
 
             numRated++;
         }

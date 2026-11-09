@@ -22,6 +22,7 @@ See the [schema reference](/recranks/schema-reference/) for a generated field li
 | `header.site.arenaClock` | Fischer parameters at game create: `{ startSec, incSec, maxSec }` (seconds) |
 | `header.date-end` | When the game ended (used for chronological rating) |
 | `header.players` | Player list with `userid`, `name`, and `result` |
+| `players[].skipRating` | When `true`, that seat is excluded from batch rating for this game; opponents may still be rated. Both seats skipping is treated like `header.unrated`. |
 | `header.unrated` | When `true`, raters skip this record |
 | `header.outcome-type` | Solo: `binary`, `graded`, `score`, or `timed` |
 | `header.score-direction` | Solo: `higher` or `lower` (timed is always `lower`) |

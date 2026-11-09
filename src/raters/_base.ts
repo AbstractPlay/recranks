@@ -90,6 +90,39 @@ export abstract class Rater {
         return rec.header.players.length === 2;
     }
 
+    /**
+     * Per-player rating opt-out. `both` → skip entire record (like `header.unrated`).
+     */
+    protected competitiveSkipMode(rec: APGameRecord): "none" | "both" | "p1" | "p2" {
+        if (rec.header.players.length !== 2) {
+            return "none";
+        }
+        const p1Skip = rec.header.players[0].skipRating === true;
+        const p2Skip = rec.header.players[1].skipRating === true;
+        if (p1Skip && p2Skip) {
+            return "both";
+        }
+        if (p1Skip) {
+            return "p1";
+        }
+        if (p2Skip) {
+            return "p2";
+        }
+        return "none";
+    }
+
+    protected competitiveResult(rec: APGameRecord): 1 | 0 | 0.5 {
+        const p1 = rec.header.players[0].result;
+        const p2 = rec.header.players[1].result;
+        if (p1 > p2) {
+            return 1;
+        }
+        if (p1 < p2) {
+            return 0;
+        }
+        return 0.5;
+    }
+
     public abstract runProcessed(batch: APGameRecord[]): IRaterResults;
 
     public run(batch: string[]): IRaterResults {

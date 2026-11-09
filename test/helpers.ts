@@ -9,6 +9,8 @@ export interface ITestGameOptions {
     p2Result?: number;
     rounds?: number;
     unrated?: boolean;
+    p1SkipRating?: boolean;
+    p2SkipRating?: boolean;
 }
 
 export function makeGameRecord(opts: ITestGameOptions = {}): APGameRecord {
@@ -33,11 +35,13 @@ export function makeGameRecord(opts: ITestGameOptions = {}): APGameRecord {
                     name: "Player One",
                     userid: opts.p1Userid ?? "user1",
                     result: opts.p1Result ?? 1,
+                    ...(opts.p1SkipRating === true ? { skipRating: true } : {}),
                 },
                 {
                     name: "Player Two",
                     userid: opts.p2Userid ?? "user2",
                     result: opts.p2Result ?? 0,
+                    ...(opts.p2SkipRating === true ? { skipRating: true } : {}),
                 },
             ],
             unrated: opts.unrated,

@@ -120,6 +120,10 @@ export interface APGameRecord {
          * Solo binary play: whether the run passed.
          */
         passed?: boolean;
+        /**
+         * When true, this seat does not participate in batch rating for this game (opponents may still be rated). Both players skipping is equivalent to header.unrated for raters that respect unrated.
+         */
+        skipRating?: boolean;
         [k: string]: unknown;
       },
       ...{
@@ -151,6 +155,10 @@ export interface APGameRecord {
          * Solo binary play: whether the run passed.
          */
         passed?: boolean;
+        /**
+         * When true, this seat does not participate in batch rating for this game (opponents may still be rated). Both players skipping is equivalent to header.unrated for raters that respect unrated.
+         */
+        skipRating?: boolean;
         [k: string]: unknown;
       }[]
     ];

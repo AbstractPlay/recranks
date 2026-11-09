@@ -91,6 +91,11 @@ export class ELOBasic extends Rater {
                 continue;
             }
 
+            const skipMode = this.competitiveSkipMode(rec);
+            if (skipMode === "both") {
+                continue;
+            }
+
             // Check for minimum number of rounds
             if (this.roundCount(rec) < this.minRounds) {
                 warnings.push(`Record ${recid} lasted fewer than ${this.minRounds} rounds. Skipping.`);
@@ -146,39 +151,69 @@ export class ELOBasic extends Rater {
                 p2rating = ratings.get(p2id)!;
             }
 
-            // Get result (only relative magnitude matters)
-            let result: 1|0|0.5 = 0.5;
-            if (p1.result > p2.result) {
-                result = 1;
-            } else if (p1.result < p2.result) {
-                result = 0;
-            }
+            const result = this.competitiveResult(rec);
+            const hadP1 = ratings.has(p1id);
+            const hadP2 = ratings.has(p2id);
 
-            // Calculate new ratings
-            const K = this.K(p1rating.rating, p1rating.recCount, p2rating.rating, p2rating.recCount);
-            const [newp1, newp2] = this.genRating(p1rating.rating, p2rating.rating, result, K);
+            const applyP1 = skipMode !== "p1";
+            const applyP2 = skipMode !== "p2";
 
-            // Update ratings
-            p1rating.rating = newp1;
-            p1rating.recCount++;
-            if (result === 1) {
-                p1rating.wins++;
-            } else if (result === 0) {
-                p1rating.losses++;
-            } else {
-                p1rating.draws++;
+            if (applyP1 && applyP2) {
+                const K = this.K(p1rating.rating, p1rating.recCount, p2rating.rating, p2rating.recCount);
+                const [newp1, newp2] = this.genRating(p1rating.rating, p2rating.rating, result, K);
+                p1rating.rating = newp1;
+                p1rating.recCount++;
+                if (result === 1) {
+                    p1rating.wins++;
+                } else if (result === 0) {
+                    p1rating.losses++;
+                } else {
+                    p1rating.draws++;
+                }
+                p2rating.rating = newp2;
+                p2rating.recCount++;
+                if (result === 1) {
+                    p2rating.losses++;
+                } else if (result === 0) {
+                    p2rating.wins++;
+                } else {
+                    p2rating.draws++;
+                }
+                ratings.set(p1id, p1rating);
+                ratings.set(p2id, p2rating);
+            } else if (applyP1) {
+                const K = this.K(p1rating.rating, p1rating.recCount, p2rating.rating, p2rating.recCount);
+                const [newp1] = this.genRating(p1rating.rating, p2rating.rating, result, K);
+                p1rating.rating = newp1;
+                p1rating.recCount++;
+                if (result === 1) {
+                    p1rating.wins++;
+                } else if (result === 0) {
+                    p1rating.losses++;
+                } else {
+                    p1rating.draws++;
+                }
+                ratings.set(p1id, p1rating);
+                if (hadP2) {
+                    ratings.set(p2id, p2rating);
+                }
+            } else if (applyP2) {
+                const K = this.K(p1rating.rating, p1rating.recCount, p2rating.rating, p2rating.recCount);
+                const [, newp2] = this.genRating(p1rating.rating, p2rating.rating, result, K);
+                p2rating.rating = newp2;
+                p2rating.recCount++;
+                if (result === 1) {
+                    p2rating.losses++;
+                } else if (result === 0) {
+                    p2rating.wins++;
+                } else {
+                    p2rating.draws++;
+                }
+                ratings.set(p2id, p2rating);
+                if (hadP1) {
+                    ratings.set(p1id, p1rating);
+                }
             }
-            p2rating.rating = newp2;
-            p2rating.recCount++;
-            if (result === 1) {
-                p2rating.losses++;
-            } else if (result === 0) {
-                p2rating.wins++;
-            } else {
-                p2rating.draws++;
-            }
-            ratings.set(p1id, p1rating);
-            ratings.set(p2id, p2rating);
             numRated++;
         }
 

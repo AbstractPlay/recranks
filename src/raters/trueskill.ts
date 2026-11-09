@@ -91,6 +91,11 @@ export class Trueskill extends Rater {
                 continue;
             }
 
+            const skipMode = this.competitiveSkipMode(rec);
+            if (skipMode === "both") {
+                continue;
+            }
+
             // Check for minimum number of rounds
             if (this.roundCount(rec) < this.minRounds) {
                 warnings.push(`Record ${recid} lasted fewer than ${this.minRounds} rounds. Skipping.`);
@@ -150,33 +155,55 @@ export class Trueskill extends Rater {
             }
             const ratingP1 = this.env.createRating(p1rating.rating, p1rating.sigma);
             const ratingP2 = this.env.createRating(p2rating.rating, p2rating.sigma);
+            const applyP1 = skipMode !== "p1";
+            const applyP2 = skipMode !== "p2";
+            const hadP1 = ratings.has(p1id);
+            const hadP2 = ratings.has(p2id);
 
-            // Get result (only relative magnitude matters)
-            let ranks: [1|0,1|0];
+            let ranks: [0 | 1, 0 | 1];
             if (p1.result > p2.result) {
-                ranks = [0,1];
-                p1rating.wins++;
-                p2rating.losses++;
+                ranks = [0, 1];
             } else if (p1.result < p2.result) {
-                ranks = [1,0];
-                p1rating.losses++;
-                p2rating.wins++;
+                ranks = [1, 0];
             } else {
-                ranks = [0,0];
-                p1rating.draws++;
-                p2rating.draws++;
+                ranks = [0, 0];
             }
 
-            // update rating
-            p1rating.recCount++;
-            p2rating.recCount++;
-            const [t1, t2] = this.env.rate([[ratingP1],[ratingP2]], ranks) as Rating[][];
-            p1rating.rating = t1[0].mu;
-            p1rating.sigma = t1[0].sigma;
-            p2rating.rating = t2[0].mu;
-            p2rating.sigma = t2[0].sigma;
-            ratings.set(p1id, {...p1rating});
-            ratings.set(p2id, {...p2rating});
+            const [t1, t2] = this.env.rate([[ratingP1], [ratingP2]], ranks) as Rating[][];
+
+            const result = this.competitiveResult(rec);
+
+            if (applyP1) {
+                if (result === 1) {
+                    p1rating.wins++;
+                } else if (result === 0) {
+                    p1rating.losses++;
+                } else {
+                    p1rating.draws++;
+                }
+                p1rating.recCount++;
+                p1rating.rating = t1[0].mu;
+                p1rating.sigma = t1[0].sigma;
+                ratings.set(p1id, { ...p1rating });
+            } else if (hadP1) {
+                ratings.set(p1id, { ...p1rating });
+            }
+
+            if (applyP2) {
+                if (result === 1) {
+                    p2rating.losses++;
+                } else if (result === 0) {
+                    p2rating.wins++;
+                } else {
+                    p2rating.draws++;
+                }
+                p2rating.recCount++;
+                p2rating.rating = t2[0].mu;
+                p2rating.sigma = t2[0].sigma;
+                ratings.set(p2id, { ...p2rating });
+            } else if (hadP2) {
+                ratings.set(p2id, { ...p2rating });
+            }
 
             numRated++;
         }
